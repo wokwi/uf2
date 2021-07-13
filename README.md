@@ -12,7 +12,7 @@ JavaScript implementation of the [UF2](https://github.com/microsoft/uf2) file fo
 const fs = require('fs');
 const { decodeBlock, familyMap } = require('uf2');
 
-const file = fs.openSync('blink.uf2');
+const file = fs.openSync('blink.uf2', 'r');
 const buffer = new Uint8Array(512);
 while (fs.readSync(file, buffer) === buffer.length) {
   const block = decodeBlock(buffer);
