@@ -16,6 +16,7 @@ export const magicValues = [
   { offset: 508, value: 0x0ab16f30 },
 ];
 
+export const blockSize = 512;
 export const maxPayloadSize = 476;
 
 export const UF2Flags = {
@@ -64,7 +65,7 @@ export class UF2EncodeError extends Error {}
 
 export function isUF2Block(data: Uint8Array) {
   const dataView = new DataView(data.buffer);
-  if (data.length !== 512) {
+  if (data.length !== blockSize) {
     return false;
   }
   for (let { offset, value } of magicValues) {
@@ -76,10 +77,12 @@ export function isUF2Block(data: Uint8Array) {
 }
 
 export function decodeBlock(data: Uint8Array): UF2BlockData {
-  if (data.length !== 512) {
-    throw new UF2DecodeError('Invalid UF2 block size. Block size must be exactly 512 bytes.');
+  if (data.length !== blockSize) {
+    throw new UF2DecodeError(
+      `Invalid UF2 block size. Block size must be exactly ${blockSize} bytes.`
+    );
   }
-  const dataView = new DataView(data.buffer);
+  const dataView = new DataView(data.buffer, data.byteOffset);
   for (let { offset, value } of magicValues) {
     const actual = dataView.getUint32(offset, true);
     if (actual !== value) {
@@ -113,18 +116,18 @@ export function decodeBlock(data: Uint8Array): UF2BlockData {
 
 export function encodeBlock(
   blockData: UF2BlockData,
-  target = new Uint8Array(512),
+  target = new Uint8Array(blockSize),
   targetOffset = 0
 ) {
-  if (target.length < targetOffset + 512) {
+  if (target.length < targetOffset + blockSize) {
     throw new UF2EncodeError(`Can't encode block: target array is too small`);
   }
   if (blockData.payload.length > maxPayloadSize) {
     throw new UF2EncodeError(`Block payload too big; must be ${maxPayloadSize} bytes or less.`);
   }
 
-  target.fill(0, targetOffset, targetOffset + 512);
-  const dataView = new DataView(target.buffer, targetOffset);
+  target.fill(0, targetOffset, targetOffset + blockSize);
+  const dataView = new DataView(target.buffer, target.byteOffset + targetOffset);
   for (let { offset, value } of magicValues) {
     dataView.setUint32(offset, value, true);
   }

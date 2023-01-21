@@ -55,6 +55,20 @@ describe('decodeBlock', () => {
     });
   });
 
+  it('should accept typed array views and decode them correctly', () => {
+    const rp2040Family = familyID('Raspberry Pi RP2040');
+    const blinkBuf = new Uint8Array(1024);
+    blinkBuf.set(blinkBlock, 100);
+    expect(decodeBlock(blinkBuf.subarray(100, 100 + 512))).toEqual({
+      boardFamily: rp2040Family,
+      flags: UF2Flags.familyIDPresent,
+      flashAddress: 0x10000000,
+      blockNumber: 0,
+      totalBlocks: 50,
+      payload: blinkPayload,
+    });
+  });
+
   it('should throw an error if the block size is invalid', () => {
     expect(() => decodeBlock(blinkBlock.slice(0, 50))).toThrowError(
       'Invalid UF2 block size. Block size must be exactly 512 bytes.'
